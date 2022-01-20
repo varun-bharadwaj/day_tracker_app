@@ -3,12 +3,17 @@ import ReactDOM from 'react-dom';
 import App from './App';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { CategoriesProvider } from "./contexts/CategoryContext"
+import { BrowserRouter } from "react-router-dom";
+
 ReactDOM.render(
   <React.StrictMode>
-    <CategoriesProvider>
-      <App />
-    </CategoriesProvider>
-  </React.StrictMode>,
+    <BrowserRouter>
+      <CategoriesProvider>
+        <App />
+      </CategoriesProvider>
+    </BrowserRouter>
+  </React.StrictMode>
+  ,
   document.getElementById('root'), document.querySelector('#app')
 );
 

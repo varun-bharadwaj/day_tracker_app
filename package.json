@@ -6,7 +6,29 @@
     "@mui/icons-material": "^5.2.5",
     "@mui/material": "^5.2.8",
     "@mui/styled-engine-sc": "^5.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "^14.2.0",
+    "express": "^4.17.2",
+    "mongodb": "^4.3.0",
     "styled-components": "^5.3.3",
     "uuid": "^8.3.2"
-  }
+  },
+  "name": "day_tracker_app",
+  "description": "day_tracker_app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/varun-bharadwaj/day_tracker_app.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/varun-bharadwaj/day_tracker_app/issues"
+  },
+  "homepage": "https://github.com/varun-bharadwaj/day_tracker_app#readme"
 }

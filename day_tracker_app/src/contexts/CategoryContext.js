@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import { v4 as uuidV4 } from "uuid"
-import useLocalStorage from "../hooks/UseLocalStorage";
+import { useLocalStorage, useLocalStorageCategories } from "../hooks/UseLocalStorage";
 const CategoryContext = React.createContext();
 
 export function useCategories() {
@@ -8,7 +8,7 @@ export function useCategories() {
 }
 
 export const CategoriesProvider = ({ children }) => {
-    const [categories, setCategories] = useLocalStorage("categories", [])
+    const [categories, setCategories] = useLocalStorageCategories("categories", [])
     const [activities, setActivities] = useLocalStorage("activities", [])
     const MISC_CATEGORY_ID = "misc"
 
@@ -16,22 +16,51 @@ export const CategoriesProvider = ({ children }) => {
         return activities.filter(activity => activity.categoryId === categoryId)
     }
 
-    function addActivity({ description, amount, categoryId }) {
+    async function addActivity({ description, amount, categoryId }) {
+        const id = uuidV4()
+        const newActivity = { id: id, description, amount, categoryId }
         setActivities(prevActivities => {
-            return [...prevActivities, { id: uuidV4(), description, amount, categoryId }]
+            return [...prevActivities, newActivity]
         })
+
+        await fetch("http://localhost:5000/activity/add", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(newActivity),
+        })
+            .catch(error => {
+                window.alert(error);
+                return;
+            });
+
+
     }
 
-    function addCategory({ name, max }) {
+    async function addCategory({ name, max }) {
+        const newCategory = { id: uuidV4(), name, max }
         setCategories(prevCategories => {
             if (prevCategories.find(category => category.name === name)) {
                 return prevCategories
             }
-            return [...prevCategories, { id: uuidV4(), name, max }]
+            return [...prevCategories, newCategory]
         })
+
+        await fetch("http://localhost:5000/record/add", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(newCategory),
+        })
+            .catch(error => {
+                window.alert(error);
+                return;
+            });
     }
 
-    function deleteCategory({ id }) {
+    async function deleteCategory( id, mongoId ) {
         setActivities(prevActivities => {
             return prevActivities.map(activity => {
                 if (activity.categoryId === id) return { ...activity, categoryId: MISC_CATEGORY_ID }
@@ -42,12 +71,19 @@ export const CategoriesProvider = ({ children }) => {
         setCategories(prevCategories => {
             return prevCategories.filter(category => category.id !== id)
         })
+        await fetch(`http://localhost:5000/${mongoId}`, {
+            method: "DELETE"
+        });
+
     }
 
-    function deleteActivity({ id }) {
+    async function deleteActivity(id, mongoId) {
         setActivities(prevActivities => {
             return prevActivities.filter(activity => activity.id !== id)
         })
+        await fetch(`http://localhost:5000/${mongoId}`, {
+            method: "DELETE"
+        });
     }
 
     return (

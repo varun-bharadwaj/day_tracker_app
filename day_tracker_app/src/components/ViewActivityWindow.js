@@ -41,7 +41,7 @@ export default function ViewActivitiesWindow({ categoryId, handleClose }) {
           {categoryId !== MISC_CATEGORY_ID && (
               <Button
                 onClick={() => {
-                  deleteCategory(category)
+                  deleteCategory(category.id, category._id)
                   handleClose()
                 }}
                 variant="outline-danger"
@@ -59,7 +59,7 @@ export default function ViewActivitiesWindow({ categoryId, handleClose }) {
                   {currencyFormatter(activity.amount)}
                 </div>
                 <Button
-                  onClick={() => deleteActivity(activity)}
+                  onClick={() => deleteActivity(activity.id, activity._id)}
                   size="sm"
                   variant="outline-danger"
                 >
