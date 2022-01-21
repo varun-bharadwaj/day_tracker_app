@@ -63,7 +63,9 @@ export const CategoriesProvider = ({ children }) => {
     async function deleteCategory( id, mongoId ) {
         setActivities(prevActivities => {
             return prevActivities.map(activity => {
-                if (activity.categoryId === id) return { ...activity, categoryId: MISC_CATEGORY_ID }
+                if (activity.categoryId === id){
+                     return { ...activity, categoryId: MISC_CATEGORY_ID }}
+
                 return activity
             }
             )
@@ -71,9 +73,10 @@ export const CategoriesProvider = ({ children }) => {
         setCategories(prevCategories => {
             return prevCategories.filter(category => category.id !== id)
         })
-        await fetch(`http://localhost:5000/${mongoId}`, {
+        await fetch(`http://localhost:5000/record/${mongoId}`, {
             method: "DELETE"
         });
+        
 
     }
 
@@ -81,9 +84,21 @@ export const CategoriesProvider = ({ children }) => {
         setActivities(prevActivities => {
             return prevActivities.filter(activity => activity.id !== id)
         })
-        await fetch(`http://localhost:5000/${mongoId}`, {
+        await fetch(`http://localhost:5000/activity/${mongoId}`, {
             method: "DELETE"
         });
+        await fetch("http://localhost:5000/activity/add", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(""),
+        })
+            .catch(error => {
+                window.alert(error);
+                return;
+            });
+
     }
 
     return (

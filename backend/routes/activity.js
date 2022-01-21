@@ -1,4 +1,7 @@
 const express = require("express");
+const Redis = require('redis')
+
+const client = Redis.createClient()
 
 // activityRoutes is an instance of the express router.
 // We use it to define our routes.
@@ -11,29 +14,36 @@ const dbo = require("../db/conn");
 // This help convert the id from string to ObjectId for the _id.
 const ObjectId = require("mongodb").ObjectId;
 
-
 // This section will help you get a list of all the activitys.
 activityRoutes.route("/activity").get(function (req, res) {
-  let db_connect = dbo.getDb("employees");
-  db_connect
-    .collection("activitys")
-    .find({})
-    .toArray(function (err, result) {
-      if (err) throw err;
-      res.json(result);
-    });
+client.get('Activities', (error, activities) =>{
+  if (error) console.log(error)
+  else if (activities != null){
+    return res.json(JSON.parse(activities))
+  }else{
+    let db_connect = dbo.getDb("employees");
+    db_connect
+      .collection("activitys")
+      .find({})
+      .toArray(function (err, result) {
+        if (err) throw err;
+        res.json(result);
+        client.set("Activities", JSON.stringify(result))
+      });
+  }
+})
 });
 
 // This section will help you get a single activity by id
 activityRoutes.route("/activity/:id").get(function (req, res) {
   let db_connect = dbo.getDb();
-  let myquery = { _id: ObjectId( req.params.id )};
+  let myquery = { _id: ObjectId(req.params.id) };
   db_connect
-      .collection("activitys")
-      .findOne(myquery, function (err, result) {
-        if (err) throw err;
-        res.json(result);
-      });
+    .collection("activitys")
+    .findOne(myquery, function (err, result) {
+      if (err) throw err;
+      res.json(result);
+    });
 });
 
 // This section will help you create a new activity.
@@ -45,6 +55,15 @@ activityRoutes.route("/activity/add").post(function (req, response) {
     amount: req.body.amount,
     categoryId: req.body.categoryId
   };
+  client.get('Activities', (error, activities) =>{
+    if(error) console.log(error)
+    console.log(myobj)
+    const curr = JSON.parse(activities)
+    curr.push(myobj)
+    client.del('Activities')
+    client.set('Activites', JSON.stringify(curr))
+    console.log(curr)
+  })
   db_connect.collection("activitys").insertOne(myobj, function (err, res) {
     if (err) throw err;
     response.json(res);
@@ -54,13 +73,13 @@ activityRoutes.route("/activity/add").post(function (req, response) {
 // This section will help you update a activity by id.
 activityRoutes.route("/update/:id").post(function (req, response) {
   let db_connect = dbo.getDb();
-  let myquery = { _id: ObjectId( req.params.id )};
+  let myquery = { _id: ObjectId(req.params.id) };
   let newvalues = {
     $set: {
-        id: req.body.id,
-        description: req.body.description,
-        amount: req.body.amount,
-        categoryId: req.body.categoryId
+      id: req.body.id,
+      description: req.body.description,
+      amount: req.body.amount,
+      categoryId: req.body.categoryId
     },
   };
   db_connect
@@ -73,12 +92,12 @@ activityRoutes.route("/update/:id").post(function (req, response) {
 });
 
 // This section will help you delete a activity
-activityRoutes.route("/:id").delete((req, response) => {
+activityRoutes.route("/activity/:id").delete((req, response) => {
   let db_connect = dbo.getDb();
-  let myquery = { _id: ObjectId( req.params.id )};
+  let myquery = { _id: ObjectId(req.params.id) };
   db_connect.collection("activitys").deleteOne(myquery, function (err, obj) {
     if (err) throw err;
-    console.log("1 document deleted");
+    client.del("Activities")
     response.status(obj);
   });
 });

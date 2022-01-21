@@ -1,5 +1,7 @@
 const express = require("express");
+const Redis = require('redis')
 
+const client = Redis.createClient()
 // recordRoutes is an instance of the express router.
 // We use it to define our routes.
 // The router will be added as a middleware and will take control of requests starting with path /record.
@@ -14,26 +16,34 @@ const ObjectId = require("mongodb").ObjectId;
 
 // This section will help you get a list of all the records.
 recordRoutes.route("/record").get(function (req, res) {
-  let db_connect = dbo.getDb("employees");
-  db_connect
-    .collection("records")
-    .find({})
-    .toArray(function (err, result) {
-      if (err) throw err;
-      res.json(result);
-    });
-});
+  client.get('Categories', (error, categories) => {
+    if (error) console.log(error)
+    else if (categories != null) {
+      return res.json(JSON.parse(categories))
+    } else {
+      let db_connect = dbo.getDb("employees");
+      db_connect
+        .collection("records")
+        .find({})
+        .toArray(function (err, result) {
+          if (err) throw err;
+          client.set("Categories", JSON.stringify(result))
+          res.json(result);
+        });
+    }
+  });
+})
 
 // This section will help you get a single record by id
 recordRoutes.route("/record/:id").get(function (req, res) {
   let db_connect = dbo.getDb();
-  let myquery = { _id: ObjectId( req.params.id )};
+  let myquery = { _id: ObjectId(req.params.id) };
   db_connect
-      .collection("records")
-      .findOne(myquery, function (err, result) {
-        if (err) throw err;
-        res.json(result);
-      });
+    .collection("records")
+    .findOne(myquery, function (err, result) {
+      if (err) throw err;
+      res.json(result);
+    });
 });
 
 // This section will help you create a new record.
@@ -44,6 +54,15 @@ recordRoutes.route("/record/add").post(function (req, response) {
     name: req.body.name,
     max: req.body.max,
   };
+
+  client.get('Categories', (error, categories) =>{
+    if(error) console.log(error)
+    const curr = JSON.parse(categories)
+    curr.push(myobj)
+    client.del('Categories')
+    client.set('Categories', JSON.stringify(curr))
+  })
+
   db_connect.collection("records").insertOne(myobj, function (err, res) {
     if (err) throw err;
     response.json(res);
@@ -53,7 +72,7 @@ recordRoutes.route("/record/add").post(function (req, response) {
 // This section will help you update a record by id.
 recordRoutes.route("/update/:id").post(function (req, response) {
   let db_connect = dbo.getDb();
-  let myquery = { _id: ObjectId( req.params.id )};
+  let myquery = { _id: ObjectId(req.params.id) };
   let newvalues = {
     $set: {
       id: req.body.id,
@@ -71,12 +90,12 @@ recordRoutes.route("/update/:id").post(function (req, response) {
 });
 
 // This section will help you delete a record
-recordRoutes.route("/:id").delete((req, response) => {
+recordRoutes.route("/record/:id").delete((req, response) => {
   let db_connect = dbo.getDb();
-  let myquery = { _id: ObjectId( req.params.id )};
+  let myquery = { _id: ObjectId(req.params.id) };
   db_connect.collection("records").deleteOne(myquery, function (err, obj) {
     if (err) throw err;
-    console.log("1 document deleted");
+    client.del("")
     response.status(obj);
   });
 });
